@@ -1,0 +1,80 @@
+version: "3.7"
+
+volumes:
+  rundeck_data:
+  rundeck_config:
+  rundeck_libext:
+
+services:
+  rundeck:
+    container_name: rundeck
+    build:
+      context: .
+      dockerfile: Dockerfile-rundeck
+    # image: <>
+    ports:
+      - 4440:4440
+    # logging:
+    #   driver: awslogs
+    #   options:
+    #     awslogs-group: /ecs/RunDeck
+    #     awslogs-region: us-east-1
+    #     awslogs-stream-prefix: rundeck
+    volumes:
+      - rundeck_data:/home/rundeck/server/data
+      - rundeck_config:/home/rundeck/server/config
+      - rundeck_libext:/home/rundeck/libext
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /root/.ssh:/root/.ssh
+      - ./jobs:/root/jobs
+      - ./jobs/hosts:/etc/ansible/hosts
+    environment:
+      - RUNDECK_SERVER_FORWARDED=true
+      - RUNDECK_SECURITY_HTTPHEADERS_ENABLED=true
+      - RUNDECK_SECURITY_HTTPHEADERS_PROVIDER_XCTO_ENABLED=true
+      - RUNDECK_SECURITY_HTTPHEADERS_PROVIDER_XXSSP_ENABLED=true
+      - RUNDECK_SECURITY_HTTPHEADERS_PROVIDER_XFO_ENABLED=true
+      - RUNDECK_SECURITY_HTTPHEADERS_PROVIDER_CSP_ENABLED=true
+      - RUNDECK_SECURITY_HTTPHEADERS_PROVIDER_CSP_CONFIG_INCLUDEXCSPHEADER=false
+      - RUNDECK_SECURITY_HTTPHEADERS_PROVIDER_CSP_CONFIG_INCLUDEXWKCSPHEADER=false
+      - RUNDECK_SECURITY_HTTPHEADERS_PROVIDER_CSP_CONFIG_POLICY
+      - RUNDECK_JVM="-Drundeck.jetty.connector.forwarded=true"
+      - RUNDECK_GRAILS_URL=
+      - RUNDECK_LOGGING_STRATEGY=CONSOLE
+      - RUNDECK_SECURITY_HTTPHEADERS_PROVIDER_CSP_CONFIG_POLICY=""
+      - RUNDECK_MAIL_SMTP_HOST=email-smtp.us-east-1.amazonaws.com
+      - RUNDECK_MAIL_SMTP_PORT=587
+      - RUNDECK_MAIL_SMTP_USERNAME=AKIASZS2VZD3PC4DKIAP
+      - RUNDECK_MAIL_SMTP_PASSWORD=
+      - RUNDECK_MAIL_PROPS=["mail.smtp.starttls.enable":"true","mail.smtp.port":"587"]
+      - RUNDECK_MAIL_FROM=
+    networks:
+      - rundeck
+
+  nginx:
+    # image: 
+    build:
+      context: .
+      dockerfile: Dockerfile-nginx
+    container_name: nginx
+    ports:
+      - 80:80
+    # logging:
+    #   driver: awslogs
+    #   options:
+    #     awslogs-group: /ecs/RunDeck
+    #     awslogs-region: us-east-1
+    #     awslogs-stream-prefix: nginx
+    volumes:
+      - ./site_config.conf:/etc/nginx/conf.d/default.conf
+    #   - <path/to/your/certs>:/etc/ssl/private
+    networks:
+      - rundeck
+    depends_on:
+      - rundeck
+    restart: always
+
+
+networks:
+  rundeck:
+    name: rundeck

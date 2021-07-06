@@ -1,0 +1,11 @@
+FROM rundeck/rundeck:3.3.12
+USER root
+RUN apt-get -y update \
+    && apt-get install -y software-properties-common \
+    && apt-add-repository --yes --update ppa:ansible/ansible \
+    && apt-get install -y ansible
+RUN ansible-galaxy collection install amazon.aws
+RUN apt-get install -y python-pip \
+    && pip install boto3
+ADD ./config/ansible.cfg /etc/ansible/ansible.cfg
+EXPOSE 4440

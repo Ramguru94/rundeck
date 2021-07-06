@@ -1,0 +1,26 @@
+version: 1
+task_definition:
+  ecs_network_mode: awsvpc
+  task_execution_role: ecsTaskExecutionRole
+  task_size:
+    cpu_limit: 4096
+    mem_limit: 8GB
+  services:
+    nginx:
+      essential: true
+      cpu_shares: 512
+      mem_limit: "512M"
+      mem_reservation: "128M"
+    rundeck:
+      essential: true
+      cpu_shares: 3072
+      mem_limit: "7168M"
+      mem_reservation: "1024M"
+run_params:
+  network_configuration:
+    awsvpc_configuration:
+      subnets:
+        - subnet-xxxxxxxxxxxxx
+      security_groups:
+        - sg-xxxxxxxxxx
+      assign_public_ip: ENABLED
